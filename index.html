@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TV Apps — Painel de Clientes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ═══════════════════════════════════════════
+     MODAL UTILITÁRIO (menu ☰)
+═══════════════════════════════════════════ -->
+<div class="utility-modal-overlay" id="utilityModal" onclick="handleUtilityModalOverlay(event)">
+  <div class="utility-modal-card" role="dialog" aria-modal="true">
+
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="modal-title-icon">⚙</div>
+        <div>
+          <h3>Menu do painel</h3>
+          <p>Configurações, faturamento e ajuda.</p>
+        </div>
+      </div>
+      <button class="close-btn" onclick="closeUtilityModal()">✕</button>
+    </div>
+
+    <div class="modal-tabs scrollable-tabs">
+      <button class="tab-btn active" id="utilityTabConfiguracoesBtn" onclick="openUtilityPanel('configuracoes')">⚙ Configurações</button>
+      <button class="tab-btn" id="utilityTabPlanosBtn"         onclick="openUtilityPanel('planos')">💎 Planos e valores</button>
+      <button class="tab-btn" id="utilityTabVisualBtn"         onclick="openUtilityPanel('visual')">🎨 Visual</button>
+      <button class="tab-btn" id="utilityTabFaturamentoBtn"    onclick="openUtilityPanel('faturamento')">◈ Faturamento</button>
+      <button class="tab-btn" id="utilityTabComoUsarBtn"       onclick="openUtilityPanel('como-usar')">◎ Como usar</button>
+      <button class="tab-btn" id="utilityTabFaqBtn"            onclick="openUtilityPanel('faq')">? FAQ</button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- CONFIGURAÇÕES -->
+      <div class="utility-panel active" id="panel-configuracoes">
+        <div class="panel-title">
+          <h3>Configurações do painel</h3>
+          <p>Integração, mensagens e preferências gerais.</p>
+        </div>
+        <div class="settings-grid">
+          <div class="settings-card">
+            <div class="settings-card-icon">⚡</div>
+            <h4>Webhook do Make</h4>
+            <p>Configure a URL para enviar notificações automáticas e integrar renovações, mensagens e cobranças.</p>
+            <div class="settings-actions">
+              <button class="btn btn-secondary" onclick="showToast('Configuração de webhook em breve.','info')">Configurar webhook</button>
+            </div>
+          </div>
+          <div class="settings-card">
+            <div class="settings-card-icon">🔔</div>
+            <h4>Mensagens automáticas</h4>
+            <p>Defina quando o sistema deve avisar sobre vencimento, renovação e pagamento pendente.</p>
+            <div class="settings-actions">
+              <button class="btn btn-secondary" onclick="showToast('Regras de mensagens em breve.','info')">Ajustar avisos</button>
+            </div>
+          </div>
+          <div class="settings-card settings-card--highlight" onclick="openUtilityPanel('planos')" style="cursor:pointer">
+            <div class="settings-card-icon">💎</div>
+            <h4>Planos e valores</h4>
+            <p>Configure o valor cobrado em cada plano. As mudanças atualizam receita e gráficos em tempo real.</p>
+            <div class="settings-actions">
+              <button class="btn btn-primary" onclick="event.stopPropagation();openUtilityPanel('planos')">Configurar valores</button>
+            </div>
+          </div>
+          <div class="settings-card settings-card--highlight" onclick="openUtilityPanel('visual')" style="cursor:pointer">
+            <div class="settings-card-icon">🎨</div>
+            <h4>Visual do sistema</h4>
+            <p>Troque a cor de destaque, fonte e arredondamento dos elementos do painel.</p>
+            <div class="settings-actions">
+              <button class="btn btn-primary" onclick="event.stopPropagation();openUtilityPanel('visual')">Personalizar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PLANOS E VALORES -->
+      <div class="utility-panel" id="panel-planos">
+        <div class="panel-title">
+          <h3>Planos e valores</h3>
+          <p>Defina o valor cobrado em cada plano. A receita estimada e o gráfico atualizam automaticamente.</p>
+        </div>
+
+        <div class="plan-editor">
+          <div class="plan-editor-inputs">
+            <div class="plan-input-card">
+              <div class="plan-input-icon">📅</div>
+              <div class="plan-input-info">
+                <h4>Plano Mensal</h4>
+                <p>Renovação a cada 30 dias</p>
+              </div>
+              <div class="plan-input-field">
+                <span class="plan-prefix">R$</span>
+                <input id="planMonthlyValue" type="number" min="0" step="0.01" placeholder="30.00" oninput="updatePlanPreview()"/>
+              </div>
+            </div>
+            <div class="plan-input-card">
+              <div class="plan-input-icon">🗓</div>
+              <div class="plan-input-info">
+                <h4>Plano Anual</h4>
+                <p>Renovação a cada 12 meses</p>
+              </div>
+              <div class="plan-input-field">
+                <span class="plan-prefix">R$</span>
+                <input id="planAnnualValue" type="number" min="0" step="0.01" placeholder="30.00" oninput="updatePlanPreview()"/>
+              </div>
+            </div>
+          </div>
+
+          <div class="plan-preview">
+            <div class="plan-preview-title">Prévia do impacto</div>
+            <div class="plan-preview-grid">
+              <div class="plan-preview-row plan-preview-header">
+                <span>Plano</span><span>Clientes</span><span>Valor unit.</span><span>Total</span>
+              </div>
+              <div class="plan-preview-row">
+                <span>Mensal</span>
+                <span id="previewMonthlyClients">—</span>
+                <span id="previewMonthlyValue">—</span>
+                <span id="previewMonthlyTotal" class="plan-preview-total">—</span>
+              </div>
+              <div class="plan-preview-row">
+                <span>Anual</span>
+                <span id="previewAnnualClients">—</span>
+                <span id="previewAnnualValue">—</span>
+                <span id="previewAnnualTotal" class="plan-preview-total">—</span>
+              </div>
+              <div class="plan-preview-row plan-preview-sum">
+                <span style="grid-column:1/4">Receita estimada total</span>
+                <span id="previewGrandTotal" class="plan-preview-grand">—</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="plan-editor-actions">
+            <button class="btn btn-ghost" onclick="resetPlanValues()">↺ Resetar para R$ 30,00</button>
+            <button class="btn btn-primary" onclick="savePlanValues()">Salvar e aplicar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VISUAL -->
+      <div class="utility-panel" id="panel-visual">
+        <div class="panel-title">
+          <h3>Visual do sistema</h3>
+          <p>Personalize cor de destaque, tipografia e bordas. As mudanças são aplicadas imediatamente.</p>
+        </div>
+
+        <div class="visual-editor">
+
+          <!-- Cores -->
+          <div class="visual-section">
+            <div class="visual-section-label">Cor de destaque</div>
+            <div class="visual-section-desc">Usada em botões primários, barras de status e badges.</div>
+            <div class="theme-grid">
+              <button class="theme-btn active" data-theme="vermelho" onclick="selectTheme('vermelho')">
+                <span class="theme-swatch" style="background:#e63946"></span>
+                <span>Vermelho</span>
+              </button>
+              <button class="theme-btn" data-theme="azul" onclick="selectTheme('azul')">
+                <span class="theme-swatch" style="background:#3b82f6"></span>
+                <span>Azul</span>
+              </button>
+              <button class="theme-btn" data-theme="roxo" onclick="selectTheme('roxo')">
+                <span class="theme-swatch" style="background:#8b5cf6"></span>
+                <span>Roxo</span>
+              </button>
+              <button class="theme-btn" data-theme="verde" onclick="selectTheme('verde')">
+                <span class="theme-swatch" style="background:#10b981"></span>
+                <span>Verde</span>
+              </button>
+              <button class="theme-btn" data-theme="laranja" onclick="selectTheme('laranja')">
+                <span class="theme-swatch" style="background:#f97316"></span>
+                <span>Laranja</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Fonte -->
+          <div class="visual-section">
+            <div class="visual-section-label">Tipografia</div>
+            <div class="visual-section-desc">Fonte usada em todo o painel.</div>
+            <div class="font-grid">
+              <button class="font-btn active" data-font="sora" onclick="selectFont('sora')" style="font-family:'Sora',sans-serif">
+                Sora — <span class="font-sample">Painel TV Apps</span>
+              </button>
+              <button class="font-btn" data-font="inter" onclick="selectFont('inter')" style="font-family:'Inter',sans-serif">
+                Inter — <span class="font-sample">Painel TV Apps</span>
+              </button>
+              <button class="font-btn" data-font="mono" onclick="selectFont('mono')" style="font-family:'JetBrains Mono',monospace">
+                Mono — <span class="font-sample">Painel TV Apps</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Raio de borda -->
+          <div class="visual-section">
+            <div class="visual-section-label">Arredondamento</div>
+            <div class="visual-section-desc">Define o raio das bordas dos cards e botões.</div>
+            <div class="radius-control">
+              <input type="range" id="radiusSlider" min="4" max="28" step="2" value="16"
+                     oninput="onRadiusChange(this.value)"/>
+              <span class="radius-label" id="radiusLabel">16px</span>
+            </div>
+            <div class="radius-preview">
+              <div class="radius-preview-box" id="radiusPreviewBox">Prévia do arredondamento</div>
+            </div>
+          </div>
+
+          <!-- Prévia -->
+          <div class="visual-section">
+            <div class="visual-section-label">Prévia do card</div>
+            <div id="visualPreviewBox" class="visual-preview-card">
+              <div class="vp-name">Carlos Henrique</div>
+              <div class="vp-sub">Mensal · Pix · R$ 30,00/mês</div>
+              <div class="vp-badge">✓ Normal</div>
+              <div class="vp-btn">↻ Renovar</div>
+            </div>
+          </div>
+
+          <div class="visual-editor-actions">
+            <button class="btn btn-ghost" onclick="resetVisual()">↺ Resetar padrão</button>
+            <button class="btn btn-primary" onclick="saveVisual()">Salvar visual</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- FATURAMENTO -->
+      <div class="utility-panel" id="panel-faturamento">
+        <div class="panel-title">
+          <h3>Faturamento</h3>
+          <p>Resumo de receita estimada com base nos planos cadastrados.</p>
+        </div>
+        <div class="billing-stats" id="billingStats"></div>
+        <div class="billing-chart-wrap">
+          <div class="panel-title chart-title">
+            <h3>Receita semanal estimada</h3>
+            <p>Calculada com base nos valores atuais dos planos.</p>
+          </div>
+          <div class="billing-chart" id="billingChart"></div>
+        </div>
+      </div>
+
+      <!-- COMO USAR -->
+      <div class="utility-panel" id="panel-como-usar">
+        <div class="panel-title">
+          <h3>Como usar o painel</h3>
+          <p>Guia rápido para o uso diário do sistema.</p>
+        </div>
+        <div class="help-grid">
+          <div class="help-card"><div class="help-step">01</div><h4>Encontre o cliente</h4><p>Use a busca por nome, telefone, e-mail, plano ou método de pagamento. Filtre entre todos, normais ou vencidos.</p></div>
+          <div class="help-card"><div class="help-step">02</div><h4>Leia a situação</h4><p>Os cards mostram vencimento, pagamento, tempo restante e observações em destaque visual por cor.</p></div>
+          <div class="help-card"><div class="help-step">03</div><h4>Ações rápidas</h4><p>Use Renovar, Editar, Pagamento e Detalhes para atualizar cada cadastro sem sair da tela principal.</p></div>
+          <div class="help-card"><div class="help-step">04</div><h4>Janelas de edição</h4><p>Edite dados, pagamento e veja detalhes completos em abas separadas dentro da mesma janela.</p></div>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="utility-panel" id="panel-faq">
+        <div class="panel-title">
+          <h3>Perguntas frequentes</h3>
+          <p>Clique na pergunta para ver a resposta.</p>
+        </div>
+        <div class="faq-list">
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">Como renovar um cliente?<span class="faq-icon">▾</span></button>
+            <div class="faq-answer">Clique em <strong>Renovar</strong> no card do cliente. O sistema adiciona 1 mês (mensal) ou 1 ano (anual) a partir da data de vencimento.</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">Como alterar a forma de pagamento?<span class="faq-icon">▾</span></button>
+            <div class="faq-answer">Clique em <strong>Pagamento</strong>. A janela abre diretamente na aba de pagamento.</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">Como editar os dados do cliente?<span class="faq-icon">▾</span></button>
+            <div class="faq-answer">Clique em <strong>Editar</strong>. Na aba de dados você altera nome, plano, telefone, e-mail e observação.</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">Como mudar os valores dos planos?<span class="faq-icon">▾</span></button>
+            <div class="faq-answer">Abra o menu (☰) → <strong>Planos e valores</strong>. Digite os novos valores, veja a prévia do impacto na receita e clique em Salvar.</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">Como personalizar o visual?<span class="faq-icon">▾</span></button>
+            <div class="faq-answer">Abra o menu (☰) → <strong>Visual</strong>. Escolha a cor de destaque, fonte e arredondamento. As mudanças são aplicadas em tempo real.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MODAL NOVO CLIENTE
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="newClientModal" onclick="handleNewClientModalOverlay(event)">
+  <div class="modal-card" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="modal-title-icon">+</div>
+        <div><h3>Novo cliente</h3><p>Preencha os dados para cadastrar no painel.</p></div>
+      </div>
+      <button class="close-btn" onclick="closeNewClientModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-grid">
+        <div class="modal-field"><label>Nome</label><input id="newName" type="text" placeholder="Ex: João da Silva"/></div>
+        <div class="modal-field"><label>Plano</label>
+          <select id="newPlan"><option value="Mensal">Mensal</option><option value="Anual">Anual</option></select>
+        </div>
+        <div class="modal-field"><label>Telefone</label><input id="newPhone" type="text" placeholder="(11) 99999-0000"/></div>
+        <div class="modal-field"><label>E-mail</label><input id="newEmail" type="email" placeholder="cliente@email.com"/></div>
+        <div class="modal-field"><label>Vencimento</label><input id="newExpiration" type="date"/></div>
+        <div class="modal-field"><label>Pagamento</label>
+          <select id="newPaymentMethod"><option>Pix</option><option>Cartão</option><option>Boleto</option><option>Dinheiro</option></select>
+        </div>
+        <div class="modal-field full"><label>Observação</label><textarea id="newNotes" placeholder="Anotações importantes..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost"    onclick="closeNewClientModal()">Cancelar</button>
+      <button class="btn btn-primary"  onclick="saveNewClient()">Cadastrar cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MODAL EXCLUIR
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="deleteModal" onclick="handleDeleteModalOverlay(event)">
+  <div class="modal-card modal-card--sm" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="modal-title-icon modal-title-icon--danger">⚠</div>
+        <div><h3>Excluir cliente</h3><p>Esta ação não pode ser desfeita.</p></div>
+      </div>
+      <button class="close-btn" onclick="closeDeleteModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="delete-confirm-text">Deseja excluir o cliente <strong id="deleteClientName"></strong> permanentemente?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost"  onclick="closeDeleteModal()">Cancelar</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Sim, excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MODAL EDITAR CLIENTE
+═══════════════════════════════════════════ -->
+<div class="modal-overlay" id="clientModal" onclick="handleModalOverlay(event)">
+  <div class="modal-card" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="modal-title-icon">✎</div>
+        <div><h3 id="modalClientName">Editar cliente</h3><p>Dados, pagamento e detalhes em abas separadas.</p></div>
+      </div>
+      <button class="close-btn" onclick="closeClientModal()">✕</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="tab-btn active" id="tabDadosBtn"     onclick="switchModalTab('dados')">◑ Dados</button>
+      <button class="tab-btn"        id="tabPagamentoBtn" onclick="switchModalTab('pagamento')">◈ Pagamento</button>
+      <button class="tab-btn"        id="tabDetalhesBtn"  onclick="switchModalTab('detalhes')">◎ Detalhes</button>
+    </div>
+    <div class="modal-body">
+      <div class="tab-panel active" id="tabDados">
+        <div class="modal-grid">
+          <div class="modal-field"><label>Nome</label><input id="modalName" type="text"/></div>
+          <div class="modal-field"><label>Plano</label>
+            <select id="modalPlan"><option value="Mensal">Mensal</option><option value="Anual">Anual</option></select>
+          </div>
+          <div class="modal-field"><label>Telefone</label><input id="modalPhone" type="text"/></div>
+          <div class="modal-field"><label>E-mail</label><input id="modalEmail" type="email"/></div>
+          <div class="modal-field"><label>Vencimento</label><input id="modalExpiration" type="date"/></div>
+          <div class="modal-field full"><label>Observação</label><textarea id="modalNotes"></textarea></div>
+        </div>
+      </div>
+      <div class="tab-panel" id="tabPagamento">
+        <div class="payment-box">
+          <h4>Forma de pagamento</h4>
+          <p>Escolha como esse cliente costuma realizar o pagamento.</p>
+          <div class="modal-grid">
+            <div class="modal-field full"><label>Método</label>
+              <select id="modalPaymentMethod"><option>Pix</option><option>Cartão</option><option>Boleto</option><option>Dinheiro</option></select>
+            </div>
+            <div class="modal-field full"><label>Observação do pagamento</label>
+              <textarea id="modalPaymentNote" placeholder="Ex: paga sempre no Pix no início do mês."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-panel" id="tabDetalhes">
+        <div class="details-panel">
+          <div class="details-highlight">
+            <div>
+              <span class="details-kicker">Resumo do cliente</span>
+              <h4 id="detailsClientName">Cliente</h4>
+              <p id="detailsClientSubtitle">Informações gerais do cadastro.</p>
+            </div>
+            <div class="details-status-badge" id="detailsStatusBadge">Normal</div>
+          </div>
+          <div class="details-grid">
+            <div class="detail-card"><span class="detail-label">Plano</span><strong id="detailsPlan">Mensal</strong></div>
+            <div class="detail-card"><span class="detail-label">Vencimento</span><strong id="detailsExpiration">—</strong></div>
+            <div class="detail-card"><span class="detail-label">Tempo restante</span><strong id="detailsRemaining">—</strong></div>
+            <div class="detail-card"><span class="detail-label">Pagamento</span><strong id="detailsPaymentMethod">—</strong></div>
+          </div>
+          <div class="details-list">
+            <div class="detail-line"><span>Telefone</span><strong id="detailsPhone">—</strong></div>
+            <div class="detail-line"><span>E-mail</span><strong id="detailsEmail">—</strong></div>
+            <div class="detail-line"><span>Observação</span><strong id="detailsNotes">—</strong></div>
+            <div class="detail-line"><span>Obs. pagamento</span><strong id="detailsPaymentNote">—</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost"   onclick="closeClientModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveClientModal()">Salvar alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     CONTEÚDO PRINCIPAL
+═══════════════════════════════════════════ -->
+<div class="container">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" onclick="openUtilityModal('configuracoes')" aria-label="Abrir menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="title">
+        <div class="title-logo">TV Apps</div>
+        <p>Painel de vencimentos e controle de clientes</p>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="resetFilters()">✕ Limpar filtros</button>
+      <button class="btn btn-primary"   onclick="openNewClientModal()">+ Novo cliente</button>
+    </div>
+  </header>
+
+  <section class="stats" id="stats"></section>
+
+  <section class="filters">
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="searchInput" placeholder="Buscar por nome, plano, telefone, e-mail ou pagamento..."/>
+      <button class="search-clear" id="searchClear" onclick="clearSearch()" style="display:none">✕</button>
+    </div>
+    <select id="statusFilter">
+      <option value="todos">Todos os status</option>
+      <option value="seguro">✓ Normal</option>
+      <option value="vencido">✗ Vencido</option>
+    </select>
+    <select id="planFilter">
+      <option value="todos">Todos os planos</option>
+      <option value="Mensal">Mensal</option>
+      <option value="Anual">Anual</option>
+    </select>
+    <select id="sortFilter">
+      <option value="asc">↑ Mais próximos do vencimento</option>
+      <option value="desc">↓ Mais distantes do vencimento</option>
+    </select>
+  </section>
+
+  <section class="board" id="clientBoard"></section>
+
+  <footer class="legend">
+    <div class="legend-items">
+      <div class="legend-item"><span class="dot dot--green"></span> Normal</div>
+      <div class="legend-item"><span class="dot dot--red"></span> Vencido</div>
+      <div class="legend-divider"></div>
+      <span class="legend-note" id="clientCount"></span>
+    </div>
+  </footer>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
