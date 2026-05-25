@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TV Apps — Acesso</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --red:      #e63946;
+      --red-glow: rgba(230,57,70,0.35);
+      --red-dim:  rgba(230,57,70,0.12);
+      --bg0: #060810;
+      --bg1: #0b0e1a;
+      --bg2: #111526;
+      --bg3: #181e30;
+      --border:    rgba(255,255,255,0.07);
+      --border-md: rgba(255,255,255,0.12);
+      --text:     #dde2f0;
+      --text-dim: #6b7899;
+      --font: 'Sora', system-ui, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg0);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Background layers ── */
+    .bg-layer {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    }
+    .bg-glow-1 {
+      position: absolute; width: 700px; height: 700px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(230,57,70,0.12) 0%, transparent 70%);
+      top: -200px; left: -200px;
+      animation: floatA 12s ease-in-out infinite alternate;
+    }
+    .bg-glow-2 {
+      position: absolute; width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(78,158,255,0.07) 0%, transparent 70%);
+      bottom: -150px; right: -100px;
+      animation: floatB 15s ease-in-out infinite alternate;
+    }
+    .bg-glow-3 {
+      position: absolute; width: 300px; height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(230,57,70,0.06) 0%, transparent 70%);
+      bottom: 30%; left: 60%;
+      animation: floatC 10s ease-in-out infinite alternate;
+    }
+    @keyframes floatA { from { transform: translate(0,0) scale(1); }   to { transform: translate(60px,40px) scale(1.1); } }
+    @keyframes floatB { from { transform: translate(0,0) scale(1); }   to { transform: translate(-40px,-60px) scale(1.15); } }
+    @keyframes floatC { from { transform: translate(0,0); }            to { transform: translate(30px,50px); } }
+
+    /* Grid lines decoration */
+    .bg-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+    }
+
+    /* ── Main wrapper ── */
+    .login-wrap {
+      position: relative; z-index: 1;
+      width: min(440px, calc(100vw - 40px));
+      display: flex; flex-direction: column; align-items: center; gap: 0;
+    }
+
+    /* ── Logo area ── */
+    .logo-area {
+      display: flex; flex-direction: column; align-items: center;
+      margin-bottom: 36px; gap: 12px;
+      animation: fadeDown 0.7s cubic-bezier(0.4,0,0.2,1) both;
+    }
+
+    .logo-icon {
+      width: 64px; height: 64px; border-radius: 18px;
+      background: linear-gradient(135deg, rgba(230,57,70,0.2) 0%, rgba(230,57,70,0.08) 100%);
+      border: 1px solid rgba(230,57,70,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem; margin-bottom: 4px;
+      box-shadow: 0 0 40px rgba(230,57,70,0.15), inset 0 1px 0 rgba(255,255,255,0.1);
+      position: relative; overflow: hidden;
+    }
+    .logo-icon::before {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+    }
+
+    .logo-name {
+      font-family: var(--mono); font-size: 1.5rem; font-weight: 600;
+      color: #fff; letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #fff 40%, rgba(255,255,255,0.55));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .logo-sub {
+      font-size: 0.82rem; color: var(--text-dim); letter-spacing: 0.02em;
+    }
+
+    /* ── Card ── */
+    .login-card {
+      width: 100%;
+      background: var(--bg1);
+      border: 1px solid var(--border-md);
+      border-radius: 24px;
+      padding: 36px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
+      animation: fadeUp 0.7s 0.15s cubic-bezier(0.4,0,0.2,1) both;
+      position: relative; overflow: hidden;
+    }
+    .login-card::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    }
+    .login-card::after {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 50%);
+    }
+
+    .card-header { margin-bottom: 28px; }
+    .card-title { font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 5px; }
+    .card-sub   { font-size: 0.83rem; color: var(--text-dim); }
+
+    /* ── Fields ── */
+    .field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 16px; }
+    .field label {
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-dim);
+    }
+
+    .input-wrap { position: relative; }
+    .input-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      font-size: 0.9rem; color: var(--text-dim); pointer-events: none;
+      transition: color 0.2s;
+    }
+
+    .field input {
+      width: 100%; padding: 13px 14px 13px 42px;
+      border-radius: 12px; border: 1px solid var(--border-md);
+      background: var(--bg0); color: #fff;
+      font-family: var(--font); font-size: 0.92rem; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      -webkit-appearance: none;
+    }
+    .field input::placeholder { color: var(--text-dim); opacity: 0.5; }
+    .field input:focus {
+      border-color: var(--red); background: var(--bg1);
+      box-shadow: 0 0 0 3px rgba(230,57,70,0.12);
+    }
+    .field input:focus + .input-icon,
+    .input-wrap:focus-within .input-icon { color: var(--red); }
+
+    /* Mostrar/ocultar senha */
+    .toggle-pw {
+      position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: var(--text-dim); cursor: pointer;
+      font-size: 0.78rem; padding: 4px 6px; border-radius: 6px;
+      transition: color 0.2s; font-family: var(--mono); font-weight: 500;
+    }
+    .toggle-pw:hover { color: var(--text); }
+
+    /* ── Error message ── */
+    .error-msg {
+      display: none; align-items: center; gap: 8px;
+      background: rgba(230,57,70,0.1); border: 1px solid rgba(230,57,70,0.25);
+      border-radius: 10px; padding: 11px 14px;
+      font-size: 0.83rem; color: #ff8088; margin-bottom: 16px;
+      animation: shake 0.4s ease;
+    }
+    .error-msg.show { display: flex; }
+    .error-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+    }
+
+    /* ── Submit button ── */
+    .btn-login {
+      width: 100%; padding: 14px;
+      background: var(--red); color: #fff; border: none;
+      border-radius: 12px; font-family: var(--font); font-size: 0.92rem;
+      font-weight: 700; cursor: pointer; letter-spacing: 0.02em;
+      transition: filter 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 24px var(--red-glow);
+      position: relative; overflow: hidden;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-login::before {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
+    }
+    .btn-login:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 8px 32px var(--red-glow); }
+    .btn-login:active:not(:disabled) { transform: scale(0.98); }
+    .btn-login:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    .btn-spinner {
+      display: none; width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    .btn-login.loading .btn-text { display: none; }
+    .btn-login.loading .btn-spinner { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Footer ── */
+    .card-footer {
+      margin-top: 22px; text-align: center;
+      font-size: 0.76rem; color: var(--text-dim);
+    }
+    .card-footer span { font-family: var(--mono); color: rgba(255,255,255,0.15); }
+
+    /* ── Splash screen (pós-login) ── */
+    .splash {
+      position: fixed; inset: 0; z-index: 100;
+      background: var(--bg0);
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center; gap: 20px;
+    }
+    .splash.show { display: flex; }
+
+    .splash-logo {
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+      animation: splashIn 0.5s cubic-bezier(0.34,1.3,0.64,1) both;
+    }
+    .splash-icon {
+      width: 80px; height: 80px; border-radius: 22px;
+      background: linear-gradient(135deg, rgba(230,57,70,0.25) 0%, rgba(230,57,70,0.1) 100%);
+      border: 1px solid rgba(230,57,70,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.2rem;
+      box-shadow: 0 0 60px rgba(230,57,70,0.2);
+    }
+    .splash-name {
+      font-family: var(--mono); font-size: 1.8rem; font-weight: 600;
+      background: linear-gradient(135deg, #fff 40%, rgba(255,255,255,0.5));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .splash-greeting {
+      font-size: 0.9rem; color: var(--text-dim); letter-spacing: 0.02em;
+    }
+
+    /* Barra de progresso */
+    .splash-bar-wrap {
+      width: 200px; height: 2px; background: rgba(255,255,255,0.06);
+      border-radius: 99px; overflow: hidden;
+      animation: splashIn 0.5s 0.2s cubic-bezier(0.34,1.3,0.64,1) both;
+    }
+    .splash-bar {
+      height: 100%; width: 0; border-radius: 99px;
+      background: linear-gradient(90deg, var(--red), rgba(230,57,70,0.5));
+      box-shadow: 0 0 10px var(--red-glow);
+      transition: width 1.8s cubic-bezier(0.4,0,0.2,1);
+    }
+    .splash-status {
+      font-family: var(--mono); font-size: 0.72rem; color: var(--text-dim);
+      letter-spacing: 0.1em; text-transform: uppercase;
+      animation: splashIn 0.5s 0.3s both;
+    }
+
+    @keyframes splashIn { from { opacity:0; transform:translateY(12px) scale(0.97); } to { opacity:1; transform:none; } }
+
+    /* Splash saindo */
+    .splash.hide {
+      animation: splashOut 0.5s cubic-bezier(0.4,0,0.2,1) forwards;
+    }
+    @keyframes splashOut {
+      from { opacity:1; transform:scale(1); }
+      to   { opacity:0; transform:scale(1.03); }
+    }
+
+    /* ── Page animations ── */
+    @keyframes fadeDown { from { opacity:0; transform:translateY(-20px); } to { opacity:1; transform:none; } }
+    @keyframes fadeUp   { from { opacity:0; transform:translateY(20px);  } to { opacity:1; transform:none; } }
+  </style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="bg-layer">
+  <div class="bg-glow-1"></div>
+  <div class="bg-glow-2"></div>
+  <div class="bg-glow-3"></div>
+  <div class="bg-grid"></div>
+</div>
+
+<!-- Login -->
+<div class="login-wrap">
+  <div class="logo-area">
+    <div class="logo-icon">📺</div>
+    <div class="logo-name">TV Apps</div>
+    <div class="logo-sub">Painel de gerenciamento de clientes</div>
+  </div>
+
+  <div class="login-card">
+    <div class="card-header">
+      <div class="card-title">Bem-vindo de volta</div>
+      <div class="card-sub">Entre com suas credenciais para acessar o painel.</div>
+    </div>
+
+    <div class="error-msg" id="errorMsg">
+      <span class="error-dot"></span>
+      <span id="errorText">Usuário ou senha incorretos.</span>
+    </div>
+
+    <div class="field">
+      <label for="inputUser">Usuário</label>
+      <div class="input-wrap">
+        <input id="inputUser" type="text" placeholder="Seu nome de usuário" autocomplete="username" spellcheck="false"/>
+        <span class="input-icon">◑</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="inputPass">Senha</label>
+      <div class="input-wrap">
+        <input id="inputPass" type="password" placeholder="••••••••" autocomplete="current-password"/>
+        <span class="input-icon">◈</span>
+        <button class="toggle-pw" type="button" id="togglePw" onclick="togglePassword()">MOSTRAR</button>
+      </div>
+    </div>
+
+    <button class="btn-login" id="btnLogin" onclick="handleLogin()">
+      <span class="btn-text">Entrar no painel</span>
+      <div class="btn-spinner"></div>
+    </button>
+
+    <div class="card-footer">
+      Acesso restrito <span>·</span> TV Apps &copy; 2026
+    </div>
+  </div>
+</div>
+
+<!-- Splash -->
+<div class="splash" id="splash">
+  <div class="splash-logo">
+    <div class="splash-icon">📺</div>
+    <div class="splash-name">TV Apps</div>
+    <div class="splash-greeting" id="splashGreeting">Carregando painel...</div>
+  </div>
+  <div class="splash-bar-wrap">
+    <div class="splash-bar" id="splashBar"></div>
+  </div>
+  <div class="splash-status" id="splashStatus">Iniciando</div>
+</div>
+
+<script>
+  // ── Credenciais ──────────────────────────────
+  const VALID_USER = "TesteX";
+  const VALID_PASS = "teste123";
+
+  const statusMessages = [
+    "Iniciando",
+    "Verificando acesso",
+    "Carregando clientes",
+    "Preparando painel",
+    "Quase pronto",
+  ];
+
+  // ── Funções ──────────────────────────────────
+
+  function togglePassword() {
+    const input = document.getElementById("inputPass");
+    const btn   = document.getElementById("togglePw");
+    const show  = input.type === "password";
+    input.type  = show ? "text" : "password";
+    btn.textContent = show ? "OCULTAR" : "MOSTRAR";
+  }
+
+  function showError(msg) {
+    const box  = document.getElementById("errorMsg");
+    const text = document.getElementById("errorText");
+    text.textContent = msg;
+    box.classList.remove("show");
+    void box.offsetWidth; // reflow para reanimar
+    box.classList.add("show");
+  }
+
+  function handleLogin() {
+    const user = document.getElementById("inputUser").value.trim();
+    const pass = document.getElementById("inputPass").value;
+    const btn  = document.getElementById("btnLogin");
+
+    if (!user || !pass) { showError("Preencha usuário e senha."); return; }
+    if (user !== VALID_USER || pass !== VALID_PASS) {
+      showError("Usuário ou senha incorretos.");
+      document.getElementById("inputPass").value = "";
+      document.getElementById("inputPass").focus();
+      return;
+    }
+
+    // Correto — inicia loading
+    btn.classList.add("loading");
+    btn.disabled = true;
+    document.getElementById("errorMsg").classList.remove("show");
+
+    setTimeout(startSplash, 600);
+  }
+
+  function startSplash() {
+    const splash  = document.getElementById("splash");
+    const bar     = document.getElementById("splashBar");
+    const status  = document.getElementById("splashStatus");
+    const greeting= document.getElementById("splashGreeting");
+    const user    = document.getElementById("inputUser").value.trim();
+
+    greeting.textContent = `Olá, ${user}! Preparando tudo para você...`;
+    splash.classList.add("show");
+
+    // Anima barra e troca status
+    let step = 0;
+    setTimeout(() => { bar.style.width = "100%"; }, 50);
+
+    const interval = setInterval(() => {
+      step++;
+      if (step < statusMessages.length) {
+        status.textContent = statusMessages[step];
+      }
+    }, 360);
+
+    // Após 2s, redireciona
+    setTimeout(() => {
+      clearInterval(interval);
+      status.textContent = "Abrindo painel";
+      splash.classList.add("hide");
+      setTimeout(() => { window.location.href = "index.html"; }, 500);
+    }, 2000);
+  }
+
+  // Enter para logar
+  document.addEventListener("keydown", e => {
+    if (e.key === "Enter") handleLogin();
+  });
+
+  // Focus no campo de usuário ao carregar
+  window.addEventListener("load", () => {
+    document.getElementById("inputUser").focus();
+  });
+</script>
+</body>
+</html>
